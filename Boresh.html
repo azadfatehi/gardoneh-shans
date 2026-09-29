@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گردونه شانس لوکس پرمیوم</title>
+    <style>
+        :root {
+            --primary: #ff007f;
+            --secondary: #00d2ff;
+            --success: #00b894;
+            --danger: #ff7675;
+            --light-box: #ffffff;
+            --text-dark: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            padding: 50px 20px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        /* لایه شبیه‌ساز انیمیشن باران کاغذ رنگی برنده */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .premium-card {
+            background: var(--light-box);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 24px;
+            padding: 35px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 22px;
+            font-weight: 800;
+            text-align: center;
+            color: #4a4a6a;
+            margin-bottom: 25px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #636e72;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #f8f9fa;
+            border: 2px solid #dfe6e9;
+            border-radius: 12px;
+            color: var(--text-dark);
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.15);
+        }
+
+        button {
+            font-family: inherit;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 22px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #00b894, #00ecc6);
+            color: white;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);
+            margin-bottom: 12px;
+        }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 184, 148, 0.35); }
+
+        .btn-manage {
+            background: #f1f2f6;
+            color: #57606f;
+            width: 100%;
+            font-size: 14px;
+            border: 1px solid #e4e8f0;
+            margin-bottom: 12px;
+        }
+        .btn-manage:hover { background: #e4e8f0; color: #2f3542; }
+
+        /* استایل دکمه جدید حذف همگانی (ریست کامل) */
+        .btn-reset-all {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+            color: white;
+            width: 100%;
+            font-size: 13px;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(214, 48, 49, 0.15);
+        }
+        .btn-reset-all:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(214, 48, 49, 0.3); }
+
+        .btn-spin {
+            background: linear-gradient(135deg, #ff007f, #b30059);
+            color: white;
+            width: 100%;
+            font-size: 17px;
+            padding: 15px;
+            box-shadow: 0 6px 15px rgba(255, 0, 127, 0.25);
+        }
+        .btn-spin:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(255, 0, 127, 0.4); }
+
+        .toast-msg {
+            position: absolute;
+            top: -60px; left: 50%;
+            transform: translateX(-50%);
+            background: #ff7675;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(255, 118, 117, 0.3);
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200;
+            white-space: nowrap;
+        }
+        .toast-msg.show { top: 20px; }
+
+        .modal {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3); z-index: 500;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #ffffff; border-radius: 20px; padding: 30px;
+            width: 100%; max-width: 440px; max-height: 75vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+        .user-list-scroll {
+            overflow-y: auto; margin-top: 15px; flex-grow: 1;
+            border: 1px solid #e4e8f0; border-radius: 12px; background: #f8f9fa;
+        }
+        .user-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; border-bottom: 1px solid #e4e8f0;
+        }
+        .user-item button { padding: 6px 12px; font-size: 12px; border-radius: 8px; font-weight: bold;}
+        .btn-edit { background: #ffeaa7; color: #d63031; }
+        .btn-delete { background: #ff7675; color: white; }
+
+        .wheel-section { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        #wheel-wrapper { position: relative; width: 320px; height: 320px; margin: 15px 0 25px 0; }
+        canvas { border-radius: 50%; border: 6px solid #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
+        #pointer {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 16px solid transparent; border-right: 16px solid transparent;
+            border-top: 26px solid var(--primary); z-index: 10;
+            filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.1));
+        }
+        #result-box { margin-top: 15px; font-size: 20px; font-weight: 700; min-height: 45px; color: #4a4a6a; }
+        .winner-text { color: #00b894; font-size: 22px; text-shadow: 0 2px 10px rgba(0,184,148,0.15); }
+    </style>
+</head>
+<body>
+
+    <!-- بوم گرافیکی مخصوص بارش کاغذ رنگی -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="toast-msg" id="toastNotification">پیغام پیش‌فرض</div>
+
+    <!-- فرم اول: ثبت نام و دکمه‌های مدیریت -->
+    <div class="premium-card">
+        <h2>👥 ثبت‌نام شرکت‌کنندگان</h2>
+        <input type="hidden" id="edit-index" value="-1">
+        
+        <div class="form-group">
+            <label id="form-action-label">افزودن کاربر جدید:</label>
+            <input type="text" id="username" placeholder="نام و نام خانوادگی">
+        </div>
+        
+        <div class="form-group">
+            <label>کد شناسایی (۱ تا ۳ رقم)</label>
+            <input type="number" id="usercode" placeholder="124" min="1" max="999">
+        </div>
+        
+        <button class="btn-add" id="btn-submit" onclick="saveUser()">➕ تایید و افزودن</button>
+        <button class="btn-manage" onclick="openModal()">🛠 مدیریت و ویرایش اعضا (<span id="count">0</span>)</button>
+        <!-- دکمه جدید ریست همگانی اسامی -->
+        <button class="btn-reset-all" onclick="resetAllUsers()">⚠️ حذف همه اعضا (Reset)</button>
+    </div>
+
+    <!-- فرم دوم: بخش گردونه -->
+    <div class="premium-card wheel-section">
+        <h2>🎡 قرعه شانس</h2>
+        <div id="wheel-wrapper">
+            <div id="pointer"></div>
+            <canvas id="wheel" width="320" height="320"></canvas>
+        </div>
+        <button class="btn-primary btn-spin" onclick="spinWheel()">🎯 شروع قرعه‌کشی</button>
+        <div id="result-box">آماده برای شروع مسابقه...</div>
+    </div>
+
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom:1px solid #e4e8f0; padding-bottom:10px; color: #4a4a6a;">🛠 لیست اعضا جهت اصلاح یا حذف</h3>
+            <div class="user-list-scroll" id="modalUsersContainer"></div>
+            <button style="margin-top:20px; background:#636e72; color:white;" onclick="closeModal()">بستن پنجره</button>
+        </div>
+    </div>
+
+<script>
+    let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
+    const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
+    
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    let currentAngle = 0;
+    let isSpinning = false;
+    let audioCtx = null;
+
+    // متغیرهای سیستم انیمیشن کاغذ رنگی بومی
+    let confettiCanvas = document.getElementById("confetti-canvas");
+    let confettiCtx = confettiCanvas.getContext("2d");
+    let confettiParticles = [];
+    let isConfettiActive = false;
+
+    function resizeConfettiCanvas() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfettiCanvas);
+    resizeConfettiCanvas();
+
+    function showToast(message) {
+        const toast = document.getElementById("toastNotification");
+        toast.innerText = message;
+        toast.classList.add("show");
+        setTimeout(() => { toast.classList.remove("show"); }, 3500);
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+    function playClickSound() {
+        initAudio();
+        if (!audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(550, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    // پخش افکت صوتی حماسی و ارکسترال هنگام مشخص شدن برنده
+    function playWinSound() {
+        initAudio();
+        if (!audioCtx) return;
+        const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // آکورد باشکوه چندفرکانسه Do مژور
+        const now = audioCtx.currentTime;
+        chords.forEach((freq, index) => {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = index % 2 === 0 ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(freq, now + index * 0.06);
+            gain.gain.setValueAtTime(0.15, now + index * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.005, now + index * 0.06 + 0.8);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + index * 0.06);
+            osc.stop(now + index * 0.06 + 0.8);
+        });
+    }
+
+    // موتور شبیه‌ساز و انیمیشن کاغذ رنگی متحرک مستقل
+    function createConfetti() {
+        confettiParticles = [];
+        const colors = ['#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#a29bfe', '#fd79a8'];
+        for (let i = 0; i < 150; i++) {
+            confettiParticles.push({
+                x: Math.random() * confettiCanvas.width,
+                y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                r: Math.random() * 6 + 4,
+                d: Math.random() * confettiCanvas.height,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 5,
+                tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                tiltAngle: 0
+            });
+        }
+    }
+
+    function animateConfetti() {
+        if (!isConfettiActive) {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            return;
+        }
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        let remaining = false;
+        confettiParticles.forEach((p) => {
+            p.tiltAngle += p.tiltAngleIncremental;
+            p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+            p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 5;
+            if (p.y <= confettiCanvas.height) remaining = true;
+            confettiCtx.beginPath();
+            confettiCtx.lineWidth = p.r;
+            confettiCtx.strokeStyle = p.color;
+            confettiCtx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+            confettiCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+            confettiCtx.stroke();
+        });
+        if (remaining) {
+            requestAnimationFrame(animateConfetti);
+        } else {
+            isConfettiActive = false;
+        }
+    }
+
+    function triggerConfettiCelebration() {
+        isConfettiActive = true;
+        createConfetti();
+        animateConfetti();
+    }
+    // تابع دکمه حذف همگانی نام‌ها و ریست کامل
+    // تابع دکمه حذف همگانی نام‌ها و ریست کامل
+    function resetAllUsers() {
+        if (usersDatabase.length === 0) { showToast("⚠️ لیستی وجود ندارد که حذف شود!"); return; }
+        if (confirm("🚨 آیا مطمئن هستید که می‌خواهید تمام اسامی و کدها را به طور کامل پاک کنید؟")) {
+            usersDatabase = [];
+            localStorage.removeItem("wheel_users");
+            document.getElementById("edit-index").value = "-1";
+            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
+            document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
+            document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
+            updateMainUI();
+            showToast("✨ کل لیست با موفقیت پاک شد.");
+        }
+    }
+
+    function openModal() { document.getElementById("userModal").style.display = "flex"; updateModalList(); }
+    function closeModal() { document.getElementById("userModal").style.display = "none"; }
+
+    function updateModalList() {
+        const container = document.getElementById("modalUsersContainer");
+        container.innerHTML = "";
+        if (usersDatabase.length === 0) {
+            container.innerHTML = "<div style='padding:20px; color:#999; text-align:center;'>هیچ عضوی ثبت نشده است.</div>";
+            return;
+        }
+        usersDatabase.forEach((user, index) => {
+            container.innerHTML += `
+                <div class="user-item">
+                    <div>
+                        <span style="font-weight:600; color:#2d3436;">👤 ${user.name}</span>
+                        <small style="color:#00d2ff; margin-right:8px;">(کد: ${user.code})</small>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-edit" onclick="startEditUser(${index})">اصلاح</button>
+                        <button class="btn-delete" onclick="deleteUser(${index})">حذف</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function drawWheel() {
+        const totalSegments = usersDatabase.length;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (totalSegments === 0) {
+            ctx.fillStyle = "rgba(0,0,0,0.03)";
+            ctx.beginPath(); ctx.arc(160, 160, 152, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = "#b2bec3"; ctx.font = "14px 'Segoe UI', Tahoma"; ctx.textAlign = "center";
+            ctx.fillText("❌ لیست شرکت‌کنندگان خالی است", 160, 165);
+            return;
+        }
+        const arcSize = (2 * Math.PI) / totalSegments;
+        for (let i = 0; i < totalSegments; i++) {
+            const angle = currentAngle + (i * arcSize);
+            ctx.fillStyle = colorPalette[i % colorPalette.length];
+            ctx.beginPath(); ctx.moveTo(160, 160);
+            ctx.arc(160, 160, 152, angle, angle + arcSize);
+            ctx.lineTo(160, 160); ctx.fill();
+            ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.save(); ctx.translate(160, 160); ctx.rotate(angle + arcSize / 2);
+            ctx.fillStyle = "#2d3436"; ctx.font = "bold 12px Tahoma"; ctx.textAlign = "right";
+            let displayName = usersDatabase[i].name;
+            if(displayName.length > 13) displayName = displayName.substring(0, 11) + "..";
+            ctx.fillText(displayName, 130, 5); ctx.restore();
+        }
+        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(160, 160, 22, 0, 2 * Math.PI); ctx.fill();
+        ctx.strokeStyle = "#e4e8f0"; ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    function saveUser() {
+        const nameInput = document.getElementById("username");
+        const codeInput = document.getElementById("usercode");
+        const editIndexInput = document.getElementById("edit-index");
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+        const editIndex = parseInt(editIndexInput.value);
+        if (!name || !code) { showToast("⚠️ لطفاً تمام فیلدها را پر کنید."); return; }
+        if (parseInt(code) < 1 || parseInt(code) > 999 || code.length > 3) {
+            showToast("⚠️ کد شناسایی باید بین ۱ تا ۳ رقم باشد."); return;
+        }
+        const isDuplicate = usersDatabase.some((user, idx) => user.code === code && idx !== editIndex);
+        if (isDuplicate) { showToast("⚠️ این کد شناسایی قبلاً ثبت شده است."); return; }
+        if (editIndex === -1) {
+            usersDatabase.push({ name: name, code: code });
+        } else {
+            usersDatabase[editIndex] = { name: name, code: code };
+            editIndexInput.value = "-1";
+            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
+            document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
+            document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
+        }
+        localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
+        updateMainUI();
+        nameInput.value = ""; codeInput.value = ""; nameInput.focus();
+    }
+
+    function startEditUser(index) {
+        document.getElementById("username").value = usersDatabase[index].name;
+        document.getElementById("usercode").value = usersDatabase[index].code;
+        document.getElementById("edit-index").value = index;
+        document.getElementById("form-action-label").innerText = "⚠️ در حال ویرایش و اصلاح:";
+        const submitBtn = document.getElementById("btn-submit");
+        submitBtn.innerText = "💾 ذخیره و اصلاح نهایی";
+        submitBtn.style.background = "linear-gradient(135deg, #ffeaa7, #fdcb6e)";
+        closeModal();
+        document.getElementById("username").focus();
+    }
+
+    function deleteUser(index) {
+        if(confirm(`آیا از حذف "${usersDatabase[index].name}" مطمئن هستید؟`)) {
+            usersDatabase.splice(index, 1);
+            document.getElementById("edit-index").value = "-1";
+            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
+            document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
+            document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
+            localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
+            updateMainUI();
+            updateModalList();
+        }
+    }
+
+    function updateMainUI() { document.getElementById("count").innerText = usersDatabase.length; drawWheel(); }
+
+    function spinWheel() {
+        if (isSpinning) return;
+        if (usersDatabase.length === 0) { showToast("⚠️ لیست خالی است؛ ابتدا ثبت‌نام کنید!"); return; }
+        isConfettiActive = false; 
+        initAudio();
+        isSpinning = true;
+        document.getElementById("result-box").innerHTML = "<span style='color:var(--secondary);'>گردونه در حال چرخش... 🌀</span>";
+        const spinDuration = 5000;
+        const startTimestamp = performance.now();
+        const extraDegrees = Math.random() * 360 + 3600;
+        const targetAngle = currentAngle + (extraDegrees * Math.PI / 180);
+        const initialAngle = currentAngle;
+        const totalSegments = usersDatabase.length;
+        const arcSize = (2 * Math.PI) / totalSegments;
+        let lastSegmentIndex = -1;
+
+        function animate(timestamp) {
+            const elapsed = timestamp - startTimestamp;
+            const progress = Math.min(elapsed / spinDuration, 1);
+            const easeOutProgress = 1 - Math.pow(1 - progress, 5);
+            currentAngle = initialAngle + (targetAngle - initialAngle) * easeOutProgress;
+            drawWheel();
+            const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
+            const correctedAngle = (normalizedAngle + 1.5 * Math.PI) % (2 * Math.PI);
+            const currentSegmentIndex = Math.floor(correctedAngle / arcSize) % totalSegments;
+            if (currentSegmentIndex !== lastSegmentIndex) {
+                playClickSound();
+                lastSegmentIndex = currentSegmentIndex;
+            }
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                isSpinning = false;
+                calculateWinner();
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+
+    function calculateWinner() {
+        const totalSegments = usersDatabase.length;
+        const arcSize = (2 * Math.PI) / totalSegments;
+        const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
+        const correctedAngle = (normalizedAngle + 1.5 * Math.PI) % (2 * Math.PI);
+        const winningIndex = Math.floor(correctedAngle / arcSize) % totalSegments;
+        const winner = usersDatabase[winningIndex];
+        document.getElementById("result-box").innerHTML = `👑 برنده مسابقه: <span class="winner-text">${winner.name} (کد: ${winner.code})</span>`;
+        playWinSound();
+        triggerConfettiCelebration(); 
+    }
+
+    updateMainUI();
+</script>
+</body>
+</html>
