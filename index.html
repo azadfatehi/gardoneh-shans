@@ -271,19 +271,25 @@
     let confettiParticles = [];
     let isConfettiActive = false;
 
-    // اتصال به دیتابیس آنلاین Supabase
+    // اتصال مستقیم به سرور ابری زنده
     const SUPABASE_URL = "https://supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const realtimeChannel = supabase.channel('lucky_wheel_room');
 
-    // تابع تشخیص ادمین از روی آدرس مرورگر
+    // 🔐 تابع اصلاح‌شده تشخیص ادمین (حذف استایل اشتباه قبلی)
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const password = urlParams.get('admin');
+        
         if (password === '1234') { 
-            document.body.classList.add('is-admin');
-            setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 1000);
+            // حذف کلاس مخفی‌کننده به محض درست بودن رمز
+            const adminElements = document.querySelectorAll('.admin-only');
+            adminElements.forEach(el => {
+                el.style.display = 'block';
+                if(el.tagName === 'BUTTON') el.style.display = 'inline-flex';
+            });
+            setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 500);
         }
     }
 
@@ -315,79 +321,6 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.04);
     }
-
-    function playWinSound() {
-        initAudio(); if (!audioCtx) return;
-        const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-        const now = audioCtx.currentTime;
-        chords.forEach((freq, index) => {
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = index % 2 === 0 ? 'triangle' : 'sine';
-            osc.frequency.setValueAtTime(freq, now + index * 0.06);
-            gain.gain.setValueAtTime(0.15, now + index * 0.06);
-            gain.gain.exponentialRampToValueAtTime(0.005, now + index * 0.06 + 0.8);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(now + index * 0.06); osc.stop(now + index * 0.06 + 0.8);
-        });
-    }
-<script>
-    let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
-    const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
-    
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    let currentAngle = 0;
-    let isSpinning = false;
-    let audioCtx = null;
-
-    let confettiCanvas = document.getElementById("confetti-canvas");
-    let confettiCtx = confettiCanvas.getContext("2d");
-    let confettiParticles = [];
-    let isConfettiActive = false;
-
-    // اتصال پایدار و زنده به سرور ابری
-    const SUPABASE_URL = "https://supabase.co"; 
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const realtimeChannel = supabase.channel('lucky_wheel_room');
-
-    function checkAdminAccess() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const password = urlParams.get('admin');
-        if (password === '1234') { 
-            document.body.classList.add('is-admin');
-            setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 1000);
-        }
-    }
-
-    function resizeConfettiCanvas() {
-        confettiCanvas.width = window.innerWidth;
-        confettiCanvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeConfettiCanvas);
-    resizeConfettiCanvas();
-    function showToast(message) {
-        const toast = document.getElementById("toastNotification");
-        toast.innerText = message;
-        toast.classList.add("show");
-        setTimeout(() => { toast.classList.remove("show"); }, 3500);
-    }
-
-    function initAudio() {
-        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    }
-
-    function playClickSound() {
-        initAudio(); if (!audioCtx) return;
-        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(550, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.04);
-    }
-
     function playWinSound() {
         initAudio(); if (!audioCtx) return;
         const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
@@ -435,7 +368,8 @@
     function triggerConfettiCelebration() { isConfettiActive = true; createConfetti(); animateConfetti(); }
 
     realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
-        if (!document.body.classList.contains('is-admin')) { startLocalSpin(payload.payload.seed); }
+        const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1234';
+        if (!isAdmin) { startLocalSpin(payload.payload.seed); }
     }).subscribe();
 
     realtimeChannel.on('broadcast', { event: 'sync_users' }, (payload) => {
