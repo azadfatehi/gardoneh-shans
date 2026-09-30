@@ -263,12 +263,8 @@
     <!-- کتابخانه Supabase برای هماهنگی آنلاین زنده بدون فیلترشکن -->
     <script src="https://jsdelivr.net"></script>
 <script>
-    // اتصال به کانال دیتابیس ابری عمومی و اشتراکی
-    const SUPABASE_URL = "https://supabase.co"; 
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let usersDatabase = [];
+<script>
+    let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
     const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
     
     const canvas = document.getElementById("wheel");
@@ -276,10 +272,27 @@
     let currentAngle = 0;
     let isSpinning = false;
     let audioCtx = null;
+
     let confettiCanvas = document.getElementById("confetti-canvas");
     let confettiCtx = confettiCanvas.getContext("2d");
     let confettiParticles = [];
     let isConfettiActive = false;
+
+    // اتصال به دیتابیس زنده و آنلاین Supabase
+    const SUPABASE_URL = "https://supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const realtimeChannel = supabase.channel('lucky_wheel_room');
+
+    // 🔐 تابع جدید تشخیص ادمین از روی آدرس مرورگر
+    function checkAdminAccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const password = urlParams.get('admin');
+        if (password === '1234') { 
+            document.body.classList.add('is-admin');
+            setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 1000);
+        }
+    }
 
     function resizeConfettiCanvas() {
         confettiCanvas.width = window.innerWidth;
@@ -296,43 +309,31 @@
     }
 
     function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     }
 
     function playClickSound() {
-        initAudio();
-        if (!audioCtx) return;
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(550, audioCtx.currentTime);
+        initAudio(); if (!audioCtx) return;
+        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(550, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.04);
         gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.04);
     }
-
-    function playWinSound() {
-        initAudio();
-        if (!audioCtx) return;
+        function playWinSound() {
+        initAudio(); if (!audioCtx) return;
         const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
         const now = audioCtx.currentTime;
         chords.forEach((freq, index) => {
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
+            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
             osc.type = index % 2 === 0 ? 'triangle' : 'sine';
             osc.frequency.setValueAtTime(freq, now + index * 0.06);
             gain.gain.setValueAtTime(0.15, now + index * 0.06);
             gain.gain.exponentialRampToValueAtTime(0.005, now + index * 0.06 + 0.8);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now + index * 0.06);
-            osc.stop(now + index * 0.06 + 0.8);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now + index * 0.06); osc.stop(now + index * 0.06 + 0.8);
         });
     }
 
@@ -343,257 +344,130 @@
             confettiParticles.push({
                 x: Math.random() * confettiCanvas.width,
                 y: Math.random() * confettiCanvas.height - confettiCanvas.height,
-                r: Math.random() * 6 + 4,
-                d: Math.random() * confettiCanvas.height,
+                r: Math.random() * 6 + 4, d: Math.random() * confettiCanvas.height,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                tilt: Math.random() * 10 - 5,
-                tiltAngleIncremental: Math.random() * 0.07 + 0.02,
-                tiltAngle: 0
+                tilt: Math.random() * 10 - 5, tiltAngleIncremental: Math.random() * 0.07 + 0.02, tiltAngle: 0
             });
         }
     }
 
     function animateConfetti() {
-        if (!isConfettiActive) {
-            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-            return;
-        }
+        if (!isConfettiActive) { confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); return; }
         confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
         let remaining = false;
         confettiParticles.forEach((p) => {
-            p.tiltAngle += p.tiltAngleIncremental;
-            p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+            p.tiltAngle += p.tiltAngleIncremental; p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
             p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 5;
             if (p.y <= confettiCanvas.height) remaining = true;
-            confettiCtx.beginPath();
-            confettiCtx.lineWidth = p.r;
-            confettiCtx.strokeStyle = p.color;
-            confettiCtx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-            confettiCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+            confettiCtx.beginPath(); confettiCtx.lineWidth = p.r; confettiCtx.strokeStyle = p.color;
+            confettiCtx.moveTo(p.x + p.tilt + p.r / 2, p.y); confettiCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
             confettiCtx.stroke();
         });
-        if (remaining) {
-            requestAnimationFrame(animateConfetti);
-        } else {
-            isConfettiActive = false;
-        }
+        if (remaining) { requestAnimationFrame(animateConfetti); } else { isConfettiActive = false; }
     }
 
-    function triggerConfettiCelebration() {
-        isConfettiActive = true;
-        createConfetti();
-        animateConfetti();
-    }
-
-    function openModal() { document.getElementById("userModal").style.display = "flex"; updateModalList(); }
-    function closeModal() { document.getElementById("userModal").style.display = "none"; }
-    function updateModalList() {
-        const container = document.getElementById("modalUsersContainer");
-        container.innerHTML = "";
-        if (usersDatabase.length === 0) {
-            container.innerHTML = "<div style='padding:20px; color:#999; text-align:center;'>هیچ عضوی ثبت نشده است.</div>";
-            return;
-        }
-        usersDatabase.forEach((user, index) => {
-            container.innerHTML += `
-                <div class="user-item">
-                    <div>
-                        <span style="font-weight:600; color:#2d3436;">👤 ${user.name}</span>
-                        <small style="color:#00d2ff; margin-right:8px;">(کد: ${user.code})</small>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-edit" onclick="startEditUser(${index})">اصلاح</button>
-                        <button class="btn-delete" onclick="deleteUser(${index})">حذف</button>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function drawWheel() {
-        const totalSegments = usersDatabase.length;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (totalSegments === 0) {
-            ctx.fillStyle = "rgba(0,0,0,0.03)";
-            ctx.beginPath(); ctx.arc(160, 160, 152, 0, 2 * Math.PI); ctx.fill();
-            ctx.fillStyle = "#b2bec3"; ctx.font = "14px 'Segoe UI', Tahoma"; ctx.textAlign = "center";
-            ctx.fillText("❌ لیست شرکت‌کنندگان خالی است", 160, 165);
-            return;
-        }
-        const arcSize = (2 * Math.PI) / totalSegments;
-        for (let i = 0; i < totalSegments; i++) {
-            const angle = currentAngle + (i * arcSize);
-            ctx.fillStyle = colorPalette[i % colorPalette.length];
-            ctx.beginPath(); ctx.moveTo(160, 160);
-            ctx.arc(160, 160, 152, angle, angle + arcSize);
-            ctx.lineTo(160, 160); ctx.fill();
-            ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
-            ctx.save(); ctx.translate(160, 160); ctx.rotate(angle + arcSize / 2);
-            ctx.fillStyle = "#2d3436"; ctx.font = "bold 12px Tahoma"; ctx.textAlign = "right";
-            let displayName = usersDatabase[i].name;
-            if(displayName.length > 13) displayName = displayName.substring(0, 11) + "..";
-            ctx.fillText(displayName, 130, 5); ctx.restore();
-        }
-        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(160, 160, 22, 0, 2 * Math.PI); ctx.fill();
-        ctx.strokeStyle = "#e4e8f0"; ctx.lineWidth = 3; ctx.stroke();
-    }
-
-    const realtimeChannel = supabase.channel('lucky_wheel_room');
+    function triggerConfettiCelebration() { isConfettiActive = true; createConfetti(); animateConfetti(); }
 
     realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
-        if (!document.body.classList.contains('is-admin')) {
-            startLocalSpin(payload.payload.seed);
-        }
+        if (!document.body.classList.contains('is-admin')) { startLocalSpin(payload.payload.seed); }
     }).subscribe();
 
-// سیستم تشخیص ادمین هوشمند بر اساس آدرس سایت (جایگزین تابع قبلی کنید)
-function checkAdminAccess() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const password = urlParams.get('admin');
-    
-    // شما می‌توانید به جای 1234 هر رمزی که دوست دارید بگذارید
-    if (password === '1234') { 
-        document.body.classList.add('is-admin');
-        showToast("👑 مدیریت آنلاین با موفقیت فعال شد.");
-    }
-}
-// اجرای خودکار بررسی رمز هنگام باز شدن سایت
-checkAdminAccess();
+    realtimeChannel.on('broadcast', { event: 'sync_users' }, (payload) => {
+        usersDatabase = payload.payload; updateMainUI();
+    }).subscribe();
+
     function saveUser() {
-        const nameInput = document.getElementById("username");
-        const codeInput = document.getElementById("usercode");
-        const editIndexInput = document.getElementById("edit-index");
-        const name = nameInput.value.trim();
-        const code = codeInput.value.trim();
-        const editIndex = parseInt(editIndexInput.value);
+        const nameInput = document.getElementById("username"); const codeInput = document.getElementById("usercode");
+        const editIndexInput = document.getElementById("edit-index"); const name = nameInput.value.trim();
+        const code = codeInput.value.trim(); const editIndex = parseInt(editIndexInput.value);
         if (!name || !code) { showToast("⚠️ لطفاً تمام فیلدها را پر کنید."); return; }
-        if (parseInt(code) < 1 || parseInt(code) > 999 || code.length > 3) {
-            showToast("⚠️ کد شناسایی باید بین ۱ تا ۳ رقم باشد."); return;
-        }
+        if (parseInt(code) < 1 || parseInt(code) > 999 || code.length > 3) { showToast("⚠️ کد شناسایی باید بین ۱ تا ۳ رقم باشد."); return; }
         const isDuplicate = usersDatabase.some((user, idx) => user.code === code && idx !== editIndex);
         if (isDuplicate) { showToast("⚠️ این کد شناسایی قبلاً ثبت شده است."); return; }
-        
-        if (editIndex === -1) {
-            usersDatabase.push({ name: name, code: code });
-        } else {
-            usersDatabase[editIndex] = { name: name, code: code };
-            editIndexInput.value = "-1";
+        if (editIndex === -1) { usersDatabase.push({ name: name, code: code }); } else {
+            usersDatabase[editIndex] = { name: name, code: code }; editIndexInput.value = "-1";
             document.getElementById("btn-submit").innerText = "➕ تایید و افزودن به سرور";
             document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
             document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
         }
-        
         localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
         realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
-        updateMainUI();
-        nameInput.value = ""; codeInput.value = ""; nameInput.focus();
+        updateMainUI(); updateModalList(); nameInput.value = ""; codeInput.value = ""; nameInput.focus();
     }
-
-    realtimeChannel.on('broadcast', { event: 'sync_users' }, (payload) => {
-        usersDatabase = payload.payload;
-        updateMainUI();
-    }).subscribe();
 
     function startEditUser(index) {
         document.getElementById("username").value = usersDatabase[index].name;
         document.getElementById("usercode").value = usersDatabase[index].code;
         document.getElementById("edit-index").value = index;
         document.getElementById("form-action-label").innerText = "⚠️ در حال ویرایش و اصلاح:";
-        const submitBtn = document.getElementById("btn-submit");
-        submitBtn.innerText = "💾 ذخیره و اصلاح نهایی";
-        submitBtn.style.background = "linear-gradient(135deg, #ffeaa7, #fdcb6e)";
-        closeModal();
-        document.getElementById("username").focus();
+        const submitBtn = document.getElementById("btn-submit"); submitBtn.innerText = "💾 ذخیره و اصلاح نهایی";
+        submitBtn.style.background = "linear-gradient(135deg, #ffeaa7, #fdcb6e)"; closeModal(); document.getElementById("username").focus();
     }
 
     function deleteUser(index) {
         if(confirm(`آیا از حذف "${usersDatabase[index].name}" مطمئن هستید؟`)) {
-            usersDatabase.splice(index, 1);
-            document.getElementById("edit-index").value = "-1";
+            usersDatabase.splice(index, 1); document.getElementById("edit-index").value = "-1";
             document.getElementById("btn-submit").innerText = "➕ تایید و افزودن به سرور";
             document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
             document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
             localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
             realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
-            updateMainUI();
-            updateModalList();
+            updateMainUI(); updateModalList();
         }
     }
 
     function resetAllUsers() {
         if (usersDatabase.length === 0) { showToast("⚠️ لیستی وجود ندارد که حذف شود!"); return; }
         if (confirm("🚨 آیا مطمئن هستید که می‌خواهید تمام اسامی را پاک کنید؟")) {
-            usersDatabase = [];
-            localStorage.removeItem("wheel_users");
+            usersDatabase = []; localStorage.removeItem("wheel_users");
             realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
-            updateMainUI();
-            showToast("✨ کل لیست با موفقیت پاک شد.");
+            updateMainUI(); updateModalList(); showToast("✨ کل لیست با موفقیت پاک شد.");
         }
     }
 
     function updateMainUI() { document.getElementById("count").innerText = usersDatabase.length; drawWheel(); }
 
     function spinWheelOnline() {
-        if (isSpinning) return;
-        if (usersDatabase.length === 0) { showToast("⚠️ لیست خالی است؛ ابتدا ثبت‌نام کنید!"); return; }
+        if (isSpinning) return; if (usersDatabase.length === 0) { showToast("⚠️ لیست خالی است؛ ابتدا ثبت‌نام کنید!"); return; }
         const sharedSeed = Math.random();
-        realtimeChannel.send({
-            type: 'broadcast',
-            event: 'spin_command',
-            payload: { seed: sharedSeed }
-        });
+        realtimeChannel.send({ type: 'broadcast', event: 'spin_command', payload: { seed: sharedSeed } });
         startLocalSpin(sharedSeed);
     }
 
     function startLocalSpin(seed) {
-        isConfettiActive = false;
-        initAudio();
-        isSpinning = true;
+        isConfettiActive = false; initAudio(); isSpinning = true;
         document.getElementById("result-box").innerHTML = "<span style='color:var(--secondary);'>گردونه در حال چرخش... 🌀</span>";
-        const spinDuration = 5000;
-        const startTimestamp = performance.now();
-        const extraDegrees = seed * 360 + 3600;
-        const targetAngle = currentAngle + (extraDegrees * Math.PI / 180);
-        const initialAngle = currentAngle;
-        const totalSegments = usersDatabase.length;
-        const arcSize = (2 * Math.PI) / totalSegments;
+        const spinDuration = 5000; const startTimestamp = performance.now();
+        const extraDegrees = seed * 360 + 3600; const targetAngle = currentAngle + (extraDegrees * Math.PI / 180);
+        const initialAngle = currentAngle; const totalSegments = usersDatabase.length; const arcSize = (2 * Math.PI) / totalSegments;
         let lastSegmentIndex = -1;
-
         function animate(timestamp) {
-            const elapsed = timestamp - startTimestamp;
-            const progress = Math.min(elapsed / spinDuration, 1);
-            const easeOutProgress = 1 - Math.pow(1 - progress, 5);
-            currentAngle = initialAngle + (targetAngle - initialAngle) * easeOutProgress;
-            drawWheel();
-            const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
+            const elapsed = timestamp - startTimestamp; const progress = Math.min(elapsed / spinDuration, 1);
+            const easeOutProgress = 1 - Math.pow(1 - progress, 5); currentAngle = initialAngle + (targetAngle - initialAngle) * easeOutProgress;
+            drawWheel(); const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
             const correctedAngle = (normalizedAngle + 1.5 * Math.PI) % (2 * Math.PI);
             const currentSegmentIndex = Math.floor(correctedAngle / arcSize) % totalSegments;
-            if (currentSegmentIndex !== lastSegmentIndex) {
-                playClickSound();
-                lastSegmentIndex = currentSegmentIndex;
-            }
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                isSpinning = false;
-                calculateWinner();
-            }
+            if (currentSegmentIndex !== lastSegmentIndex) { playClickSound(); lastSegmentIndex = currentSegmentIndex; }
+            if (progress < 1) { requestAnimationFrame(animate); } else { isSpinning = false; calculateWinner(); }
         }
         requestAnimationFrame(animate);
     }
 
     function calculateWinner() {
-        const totalSegments = usersDatabase.length;
-        const arcSize = (2 * Math.PI) / totalSegments;
-        const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI));
-        const correctedAngle = (normalizedAngle + 1.5 * Math.PI) % (2 * Math.PI);
-        const winningIndex = Math.floor(correctedAngle / arcSize) % totalSegments;
-        const winner = usersDatabase[winningIndex];
+        const totalSegments = usersDatabase.length; const arcSize = (2 * Math.PI) / totalSegments;
+        const normalizedAngle = (2 * Math.PI) - (currentAngle % (2 * Math.PI)); const correctedAngle = (normalizedAngle + 1.5 * Math.PI) % (2 * Math.PI);
+        const winningIndex = Math.floor(correctedAngle / arcSize) % totalSegments; const winner = usersDatabase[winningIndex];
         document.getElementById("result-box").innerHTML = `👑 برنده مسابقه: <span class="winner-text">${winner.name} (کد: ${winner.code})</span>`;
-        playWinSound();
-        triggerConfettiCelebration();
+        playWinSound(); triggerConfettiCelebration();
     }
 
+    // بررسی خودکار رمز عبور در آدرس به محض لود شدن برنامه
     updateMainUI();
+    checkAdminAccess();
+</script>
+</body>
+</html>
+
 </script>
 </body>
 </html>
