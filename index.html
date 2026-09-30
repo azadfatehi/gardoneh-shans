@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>گردونه شانس لوکس پرمیوم</title>
+    <title>قرعه‌کشی آنلاین و زنده</title>
     <style>
         :root {
             --primary: #ff007f;
@@ -30,7 +30,6 @@
             position: relative;
         }
 
-        /* لایه شبیه‌ساز انیمیشن باران کاغذ رنگی برنده */
         #confetti-canvas {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -50,6 +49,10 @@
             overflow: hidden;
             transition: all 0.3s ease;
         }
+
+        /* بخش پنهان کردن فرم برای تماشاچیان */
+        .admin-only { display: none; }
+        body.is-admin .admin-only { display: block; }
 
         .premium-card::before {
             content: '';
@@ -130,7 +133,6 @@
         }
         .btn-manage:hover { background: #e4e8f0; color: #2f3542; }
 
-        /* استایل دکمه جدید حذف همگانی (ریست کامل) */
         .btn-reset-all {
             background: linear-gradient(135deg, #ff7675, #d63031);
             color: white;
@@ -205,18 +207,23 @@
         }
         #result-box { margin-top: 15px; font-size: 20px; font-weight: 700; min-height: 45px; color: #4a4a6a; }
         .winner-text { color: #00b894; font-size: 22px; text-shadow: 0 2px 10px rgba(0,184,148,0.15); }
+        
+        /* دکمه ادمین شدن موقت */
+        .admin-trigger {
+            position: fixed; bottom: 10px; left: 10px; 
+            background: rgba(0,0,0,0.1); color: rgba(0,0,0,0.3);
+            font-size: 10px; padding: 5px; border-radius: 5px; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <!-- بوم گرافیکی مخصوص بارش کاغذ رنگی -->
     <canvas id="confetti-canvas"></canvas>
-
     <div class="toast-msg" id="toastNotification">پیغام پیش‌فرض</div>
 
-    <!-- فرم اول: ثبت نام و دکمه‌های مدیریت -->
-    <div class="premium-card">
-        <h2>👥 ثبت‌نام شرکت‌کنندگان</h2>
+    <!-- فرم مدیریت: فقط برای شما (ادمین) ظاهر می‌شود -->
+    <div class="premium-card admin-only">
+        <h2>👥 مدیریت آنلاین شرکت‌کنندگان</h2>
         <input type="hidden" id="edit-index" value="-1">
         
         <div class="form-group">
@@ -229,21 +236,21 @@
             <input type="number" id="usercode" placeholder="124" min="1" max="999">
         </div>
         
-        <button class="btn-add" id="btn-submit" onclick="saveUser()">➕ تایید و افزودن</button>
+        <button class="btn-add" id="btn-submit" onclick="saveUser()">➕ تایید و افزودن به سرور</button>
         <button class="btn-manage" onclick="openModal()">🛠 مدیریت و ویرایش اعضا (<span id="count">0</span>)</button>
-        <!-- دکمه جدید ریست همگانی اسامی -->
         <button class="btn-reset-all" onclick="resetAllUsers()">⚠️ حذف همه اعضا (Reset)</button>
     </div>
 
-    <!-- فرم دوم: بخش گردونه -->
+    <!-- فرم گردونه: برای همه کاربران همزمان لود می‌شود -->
     <div class="premium-card wheel-section">
-        <h2>🎡 قرعه شانس</h2>
+        <h2>🎡 گردونه شانس زنده و همزمان</h2>
         <div id="wheel-wrapper">
             <div id="pointer"></div>
             <canvas id="wheel" width="320" height="320"></canvas>
         </div>
-        <button class="btn-primary btn-spin" onclick="spinWheel()">🎯 شروع قرعه‌کشی</button>
-        <div id="result-box">آماده برای شروع مسابقه...</div>
+        <!-- دکمه چرخش فقط برای ادمین نمایش داده می‌شود -->
+        <button class="btn-primary btn-spin admin-only" id="spin-btn" onclick="spinWheelOnline()">🎯 شروع قرعه‌کشی زنده</button>
+        <div id="result-box">منتظر شروع توسط مدیر...</div>
     </div>
 
     <div class="modal" id="userModal">
@@ -254,8 +261,18 @@
         </div>
     </div>
 
+    <!-- یک دکمه مخفی کوچک در گوشه صفحه برای اینکه خودتان را ادمین کنید -->
+    <div class="admin-trigger" onclick="makeMeAdmin()">ورود به پنل مدیریت</div>
+
+    <!-- کتابخانه Supabase برای هماهنگی آنلاین زنده بدون فیلترشکن -->
+    <script src="https://jsdelivr.net"></script>
 <script>
-    let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
+    // اتصال به کانال دیتابیس ابری عمومی و اشتراکی
+    const SUPABASE_URL = "https://supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let usersDatabase = [];
     const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
     
     const canvas = document.getElementById("wheel");
@@ -263,8 +280,6 @@
     let currentAngle = 0;
     let isSpinning = false;
     let audioCtx = null;
-
-    // متغیرهای سیستم انیمیشن کاغذ رنگی بومی
     let confettiCanvas = document.getElementById("confetti-canvas");
     let confettiCtx = confettiCanvas.getContext("2d");
     let confettiParticles = [];
@@ -289,6 +304,7 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
     }
+
     function playClickSound() {
         initAudio();
         if (!audioCtx) return;
@@ -305,11 +321,10 @@
         osc.stop(audioCtx.currentTime + 0.04);
     }
 
-    // پخش افکت صوتی حماسی و ارکسترال هنگام مشخص شدن برنده
     function playWinSound() {
         initAudio();
         if (!audioCtx) return;
-        const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // آکورد باشکوه چندفرکانسه Do مژور
+        const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
         const now = audioCtx.currentTime;
         chords.forEach((freq, index) => {
             let osc = audioCtx.createOscillator();
@@ -325,11 +340,10 @@
         });
     }
 
-    // موتور شبیه‌ساز و انیمیشن کاغذ رنگی متحرک مستقل
     function createConfetti() {
         confettiParticles = [];
         const colors = ['#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#a29bfe', '#fd79a8'];
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 120; i++) {
             confettiParticles.push({
                 x: Math.random() * confettiCanvas.width,
                 y: Math.random() * confettiCanvas.height - confettiCanvas.height,
@@ -374,25 +388,9 @@
         createConfetti();
         animateConfetti();
     }
-    // تابع دکمه حذف همگانی نام‌ها و ریست کامل
-    // تابع دکمه حذف همگانی نام‌ها و ریست کامل
-    function resetAllUsers() {
-        if (usersDatabase.length === 0) { showToast("⚠️ لیستی وجود ندارد که حذف شود!"); return; }
-        if (confirm("🚨 آیا مطمئن هستید که می‌خواهید تمام اسامی و کدها را به طور کامل پاک کنید؟")) {
-            usersDatabase = [];
-            localStorage.removeItem("wheel_users");
-            document.getElementById("edit-index").value = "-1";
-            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
-            document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
-            document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
-            updateMainUI();
-            showToast("✨ کل لیست با موفقیت پاک شد.");
-        }
-    }
 
     function openModal() { document.getElementById("userModal").style.display = "flex"; updateModalList(); }
     function closeModal() { document.getElementById("userModal").style.display = "none"; }
-
     function updateModalList() {
         const container = document.getElementById("modalUsersContainer");
         container.innerHTML = "";
@@ -443,6 +441,18 @@
         ctx.strokeStyle = "#e4e8f0"; ctx.lineWidth = 3; ctx.stroke();
     }
 
+    const realtimeChannel = supabase.channel('lucky_wheel_room');
+
+    realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
+        if (!document.body.classList.contains('is-admin')) {
+            startLocalSpin(payload.payload.seed);
+        }
+    }).subscribe();
+
+    function makeMeAdmin() {
+        document.body.classList.add('is-admin');
+        showToast("👑 شما به عنوان مدیر وارد شدید! فرم مدیریت و دکمه چرخاندن برای شما فعال شد.");
+    }
     function saveUser() {
         const nameInput = document.getElementById("username");
         const codeInput = document.getElementById("usercode");
@@ -456,19 +466,27 @@
         }
         const isDuplicate = usersDatabase.some((user, idx) => user.code === code && idx !== editIndex);
         if (isDuplicate) { showToast("⚠️ این کد شناسایی قبلاً ثبت شده است."); return; }
+        
         if (editIndex === -1) {
             usersDatabase.push({ name: name, code: code });
         } else {
             usersDatabase[editIndex] = { name: name, code: code };
             editIndexInput.value = "-1";
-            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
+            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن به سرور";
             document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
             document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
         }
+        
         localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
+        realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
         updateMainUI();
         nameInput.value = ""; codeInput.value = ""; nameInput.focus();
     }
+
+    realtimeChannel.on('broadcast', { event: 'sync_users' }, (payload) => {
+        usersDatabase = payload.payload;
+        updateMainUI();
+    }).subscribe();
 
     function startEditUser(index) {
         document.getElementById("username").value = usersDatabase[index].name;
@@ -486,27 +504,49 @@
         if(confirm(`آیا از حذف "${usersDatabase[index].name}" مطمئن هستید؟`)) {
             usersDatabase.splice(index, 1);
             document.getElementById("edit-index").value = "-1";
-            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن";
+            document.getElementById("btn-submit").innerText = "➕ تایید و افزودن به سرور";
             document.getElementById("btn-submit").style.background = "linear-gradient(135deg, #00b894, #00ecc6)";
             document.getElementById("form-action-label").innerText = "افزودن کاربر جدید:";
             localStorage.setItem("wheel_users", JSON.stringify(usersDatabase));
+            realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
             updateMainUI();
             updateModalList();
         }
     }
 
+    function resetAllUsers() {
+        if (usersDatabase.length === 0) { showToast("⚠️ لیستی وجود ندارد که حذف شود!"); return; }
+        if (confirm("🚨 آیا مطمئن هستید که می‌خواهید تمام اسامی را پاک کنید؟")) {
+            usersDatabase = [];
+            localStorage.removeItem("wheel_users");
+            realtimeChannel.send({ type: 'broadcast', event: 'sync_users', payload: usersDatabase });
+            updateMainUI();
+            showToast("✨ کل لیست با موفقیت پاک شد.");
+        }
+    }
+
     function updateMainUI() { document.getElementById("count").innerText = usersDatabase.length; drawWheel(); }
 
-    function spinWheel() {
+    function spinWheelOnline() {
         if (isSpinning) return;
         if (usersDatabase.length === 0) { showToast("⚠️ لیست خالی است؛ ابتدا ثبت‌نام کنید!"); return; }
-        isConfettiActive = false; 
+        const sharedSeed = Math.random();
+        realtimeChannel.send({
+            type: 'broadcast',
+            event: 'spin_command',
+            payload: { seed: sharedSeed }
+        });
+        startLocalSpin(sharedSeed);
+    }
+
+    function startLocalSpin(seed) {
+        isConfettiActive = false;
         initAudio();
         isSpinning = true;
         document.getElementById("result-box").innerHTML = "<span style='color:var(--secondary);'>گردونه در حال چرخش... 🌀</span>";
         const spinDuration = 5000;
         const startTimestamp = performance.now();
-        const extraDegrees = Math.random() * 360 + 3600;
+        const extraDegrees = seed * 360 + 3600;
         const targetAngle = currentAngle + (extraDegrees * Math.PI / 180);
         const initialAngle = currentAngle;
         const totalSegments = usersDatabase.length;
@@ -545,7 +585,7 @@
         const winner = usersDatabase[winningIndex];
         document.getElementById("result-box").innerHTML = `👑 برنده مسابقه: <span class="winner-text">${winner.name} (کد: ${winner.code})</span>`;
         playWinSound();
-        triggerConfettiCelebration(); 
+        triggerConfettiCelebration();
     }
 
     updateMainUI();
