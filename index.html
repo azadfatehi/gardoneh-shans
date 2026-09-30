@@ -50,7 +50,9 @@
             transition: all 0.3s ease;
         }
 
+        /* قفل نمایش که فقط با تایید جاوااسکریپت باز می‌شود */
         .admin-only { display: none; }
+
         .premium-card::before {
             content: '';
             position: absolute;
@@ -59,24 +61,11 @@
         }
 
         h2 {
-            margin-top: 0;
-            font-size: 22px;
-            font-weight: 800;
-            text-align: center;
-            color: #4a4a6a;
-            margin-bottom: 25px;
+            margin-top: 0; font-size: 22px; font-weight: 800;
+            text-align: center; color: #4a4a6a; margin-bottom: 25px;
         }
-
         .form-group { margin-bottom: 20px; }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #636e72;
-            font-weight: bold;
-        }
-
+        label { display: block; margin-bottom: 8px; font-size: 13px; color: #636e72; font-weight: bold; }
         input {
             width: 100%;
             padding: 14px 16px;
@@ -211,7 +200,7 @@
     <canvas id="confetti-canvas"></canvas>
     <div class="toast-msg" id="toastNotification">⚠️ پیغام سیستم</div>
 
-    <!-- اصلاح تداخل: کادر ادمین با کلاس صحیح -->
+    <!-- بخش ادمین با شناسه معتبر -->
     <div class="premium-card admin-only" id="admin-panel">
         <h2>👥 ثبت‌نام شرکت‌کنندگان</h2>
         <input type="hidden" id="edit-index" value="-1">
@@ -237,7 +226,7 @@
             <div id="pointer"></div>
             <canvas id="wheel" width="320" height="320"></canvas>
         </div>
-        <button class="btn-primary btn-spin admin-only" id="spin-btn" style="display: none;" onclick="spinWheelOnline()">🎯 شروع قرعه‌کشی زنده</button>
+        <button class="btn-primary btn-spin admin-only" id="spin-btn" onclick="spinWheelOnline()">🎯 شروع قرعه‌کشی زنده</button>
         <div id="result-box">منتظر شروع توسط مدیر...</div>
     </div>
 
@@ -249,7 +238,8 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com"></script>
+    <!-- استفاده از شبکه توزیع پایدار و بدون فیلتر cdnjs به جای unpkg قدیمی -->
+    <script src="https://cloudflare.com"></script>
 <script>
     let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
     const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
@@ -265,20 +255,18 @@
     let confettiParticles = [];
     let isConfettiActive = false;
 
-    // اتصال و پیکربندی بدون خطای پایگاه داده آنلاین ابری
+    // ۱. مقداردهی اولیه کلاینت با استفاده از آبجکت استاندارد کتابخانه cdnjs
     const SUPABASE_URL = "https://supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const realtimeChannel = supabase.channel('lucky_wheel_room');
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const realtimeChannel = supabaseClient.channel('lucky_wheel_room');
 
-    // 🔐 سیستم احراز هویت و نمایش بی‌نقص ماژول‌ها بدون تداخل ظاهری
-    // 🔐 تابع اصلاح‌شده برای نمایش قطعی و بدون قفل پنل مدیریت
+    // 🔐 ۲. سیستم ورود اختصاصی مدیر با اصلاح اولویت‌های استایل بدون قفل ظاهری
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const password = urlParams.get('admin');
         
         if (password === '1234') { 
-            // حذف کامل محدودیت نمایش برای پنل ثبت‌نام و دکمه چرخش
             const adminPanel = document.getElementById('admin-panel');
             const spinBtn = document.getElementById('spin-btn');
             
@@ -317,6 +305,7 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.04);
     }
+
     function playWinSound() {
         initAudio(); if (!audioCtx) return;
         const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
@@ -362,7 +351,6 @@
     }
 
     function triggerConfettiCelebration() { isConfettiActive = true; createConfetti(); animateConfetti(); }
-
     realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
         const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1234';
         if (!isAdmin) { startLocalSpin(payload.payload.seed); }
@@ -396,6 +384,7 @@
                 </div>`;
         });
     }
+
     function drawWheel() {
         const totalSegments = usersDatabase.length;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -511,13 +500,6 @@
 
     updateMainUI();
     checkAdminAccess();
-        // اجرای خودکار سیستم به‌روزرسانی رابط کاربری و بررسی قفل ادمین هنگام باز شدن سایت
-    updateMainUI();
-    checkAdminAccess();
-</script>
-</body>
-</html>
-
 </script>
 </body>
 </html>
