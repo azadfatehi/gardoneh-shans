@@ -50,7 +50,7 @@
             transition: all 0.3s ease;
         }
 
-        /* قفل نمایش که فقط با تایید جاوااسکریپت باز می‌شود */
+        /* بخش مدیریت به طور پیش‌فرض برای تماشاچی مخفی است */
         .admin-only { display: none; }
 
         .premium-card::before {
@@ -61,122 +61,48 @@
         }
 
         h2 {
-            margin-top: 0; font-size: 22px; font-weight: 800;
-            text-align: center; color: #4a4a6a; margin-bottom: 25px;
+            margin-top: 0;
+            font-size: 22px;
+            font-weight: 800;
+            text-align: center;
+            color: #4a4a6a;
+            margin-bottom: 25px;
         }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 13px; color: #636e72; font-weight: bold; }
+        
         input {
-            width: 100%;
-            padding: 14px 16px;
-            background: #f8f9fa;
-            border: 2px solid #dfe6e9;
-            border-radius: 12px;
-            color: var(--text-dark);
-            font-family: inherit;
-            font-size: 14px;
-            box-sizing: border-box;
-            transition: all 0.3s;
+            width: 100%; padding: 14px 16px; background: #f8f9fa; border: 2px solid #dfe6e9;
+            border-radius: 12px; color: var(--text-dark); font-family: inherit; font-size: 14px;
+            box-sizing: border-box; transition: all 0.3s;
         }
-
-        input:focus {
-            outline: none;
-            border-color: var(--secondary);
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.15);
-        }
+        input:focus { outline: none; border-color: var(--secondary); background: #ffffff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.15); }
 
         button {
-            font-family: inherit;
-            font-weight: 700;
-            border: none;
-            border-radius: 12px;
-            padding: 14px 22px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            font-family: inherit; font-weight: 700; border: none; border-radius: 12px;
+            padding: 14px 22px; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        .btn-add {
-            background: linear-gradient(135deg, #00b894, #00ecc6);
-            color: white;
-            width: 100%;
-            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);
-            margin-bottom: 12px;
-        }
+        .btn-add { background: linear-gradient(135deg, #00b894, #00ecc6); color: white; width: 100%; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2); margin-bottom: 12px; }
         .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 184, 148, 0.35); }
 
-        .btn-manage {
-            background: #f1f2f6;
-            color: #57606f;
-            width: 100%;
-            font-size: 14px;
-            border: 1px solid #e4e8f0;
-            margin-bottom: 12px;
-        }
+        .btn-manage { background: #f1f2f6; color: #57606f; width: 100%; font-size: 14px; border: 1px solid #e4e8f0; margin-bottom: 12px; }
         .btn-manage:hover { background: #e4e8f0; color: #2f3542; }
 
-        .btn-reset-all {
-            background: linear-gradient(135deg, #ff7675, #d63031);
-            color: white;
-            width: 100%;
-            font-size: 13px;
-            padding: 10px;
-            box-shadow: 0 4px 10px rgba(214, 48, 49, 0.15);
-        }
+        .btn-reset-all { background: linear-gradient(135deg, #ff7675, #d63031); color: white; width: 100%; font-size: 13px; padding: 10px; box-shadow: 0 4px 10px rgba(214, 48, 49, 0.15); }
         .btn-reset-all:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(214, 48, 49, 0.3); }
 
-        .btn-spin {
-            background: linear-gradient(135deg, #ff007f, #b30059);
-            color: white;
-            width: 100%;
-            font-size: 17px;
-            padding: 15px;
-            box-shadow: 0 6px 15px rgba(255, 0, 127, 0.25);
-        }
+        .btn-spin { background: linear-gradient(135deg, #ff007f, #b30059); color: white; width: 100%; font-size: 17px; padding: 15px; box-shadow: 0 6px 15px rgba(255, 0, 127, 0.25); }
         .btn-spin:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(255, 0, 127, 0.4); }
 
-        .toast-msg {
-            position: absolute;
-            top: -60px; left: 50%;
-            transform: translateX(-50%);
-            background: #ff7675;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: bold;
-            box-shadow: 0 10px 20px rgba(255, 118, 117, 0.3);
-            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 200;
-            white-space: nowrap;
-        }
+        .toast-msg { position: absolute; top: -60px; left: 50%; transform: translateX(-50%); background: #ff7675; color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: bold; box-shadow: 0 10px 20px rgba(255, 118, 117, 0.3); transition: top 0.4s; z-index: 200; white-space: nowrap; }
         .toast-msg.show { top: 20px; }
 
-        .modal {
-            display: none; position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.3); z-index: 500;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #ffffff; border-radius: 20px; padding: 30px;
-            width: 100%; max-width: 440px; max-height: 75vh;
-            display: flex; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-        }
-        .user-list-scroll {
-            overflow-y: auto; margin-top: 15px; flex-grow: 1;
-            border: 1px solid #e4e8f0; border-radius: 12px; background: #f8f9fa;
-        }
-        .user-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; border-bottom: 1px solid #e4e8f0;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); z-index: 500; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #ffffff; border-radius: 20px; padding: 30px; width: 100%; max-width: 440px; max-height: 75vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
+        .user-list-scroll { overflow-y: auto; margin-top: 15px; flex-grow: 1; border: 1px solid #e4e8f0; border-radius: 12px; background: #f8f9fa; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #e4e8f0; }
         .user-item button { padding: 6px 12px; font-size: 12px; border-radius: 8px; font-weight: bold;}
         .btn-edit { background: #ffeaa7; color: #d63031; }
         .btn-delete { background: #ff7675; color: white; }
@@ -184,13 +110,7 @@
         .wheel-section { text-align: center; display: flex; flex-direction: column; align-items: center; }
         #wheel-wrapper { position: relative; width: 320px; height: 320px; margin: 15px 0 25px 0; }
         canvas { border-radius: 50%; border: 6px solid #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.06); }
-        #pointer {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 16px solid transparent; border-right: 16px solid transparent;
-            border-top: 26px solid var(--primary); z-index: 10;
-            filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.1));
-        }
+        #pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 26px solid var(--primary); z-index: 10; filter: drop-shadow(0px 3px 5px rgba(0,0,0,0.1)); }
         #result-box { margin-top: 15px; font-size: 20px; font-weight: 700; min-height: 45px; color: #4a4a6a; }
         .winner-text { color: #00b894; font-size: 22px; text-shadow: 0 2px 10px rgba(0,184,148,0.15); }
     </style>
@@ -200,21 +120,18 @@
     <canvas id="confetti-canvas"></canvas>
     <div class="toast-msg" id="toastNotification">⚠️ پیغام سیستم</div>
 
-    <!-- بخش ادمین با شناسه معتبر -->
+    <!-- فرم مدیریت با شناسه معتبر -->
     <div class="premium-card admin-only" id="admin-panel">
         <h2>👥 ثبت‌نام شرکت‌کنندگان</h2>
         <input type="hidden" id="edit-index" value="-1">
-        
         <div class="form-group">
             <label id="form-action-label">افزودن کاربر جدید:</label>
             <input type="text" id="username" placeholder="نام و نام خانوادگی">
         </div>
-        
         <div class="form-group">
             <label>کد شناسایی (۱ تا ۳ رقم)</label>
             <input type="number" id="usercode" placeholder="124" min="1" max="999">
         </div>
-        
         <button class="btn-add" id="btn-submit" onclick="saveUser()">➕ تایید و افزودن</button>
         <button class="btn-manage" onclick="openModal()">🛠 مدیریت و ویرایش اعضا (<span id="count">0</span>)</button>
         <button class="btn-reset-all" onclick="resetAllUsers()">⚠️ حذف همه اعضا (Reset)</button>
@@ -238,74 +155,8 @@
         </div>
     </div>
 
-    <!-- استفاده از شبکه توزیع پایدار و بدون فیلتر cdnjs به جای unpkg قدیمی -->
+    <!-- اسکریپت رسمی و پایدار CDNJS جایگزین آدرس خطادار قدیمی -->
     <script src="https://cloudflare.com"></script>
-<script>
-    let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
-    const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
-    
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    let currentAngle = 0;
-    let isSpinning = false;
-    let audioCtx = null;
-
-    let confettiCanvas = document.getElementById("confetti-canvas");
-    let confettiCtx = confettiCanvas.getContext("2d");
-    let confettiParticles = [];
-    let isConfettiActive = false;
-
-    // ۱. مقداردهی اولیه کلاینت با استفاده از آبجکت استاندارد کتابخانه cdnjs
-    const SUPABASE_URL = "https://supabase.co"; 
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const realtimeChannel = supabaseClient.channel('lucky_wheel_room');
-
-    // 🔐 ۲. سیستم ورود اختصاصی مدیر با اصلاح اولویت‌های استایل بدون قفل ظاهری
-    function checkAdminAccess() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const password = urlParams.get('admin');
-        
-        if (password === '1234') { 
-            const adminPanel = document.getElementById('admin-panel');
-            const spinBtn = document.getElementById('spin-btn');
-            
-            if (adminPanel) adminPanel.style.setProperty('display', 'block', 'important');
-            if (spinBtn) spinBtn.style.setProperty('display', 'inline-flex', 'important');
-            
-            setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 500);
-        }
-    }
-
-    function resizeConfettiCanvas() {
-        confettiCanvas.width = window.innerWidth;
-        confettiCanvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeConfettiCanvas);
-    resizeConfettiCanvas();
-
-    function showToast(message) {
-        const toast = document.getElementById("toastNotification");
-        toast.innerText = message;
-        toast.classList.add("show");
-        setTimeout(() => { toast.classList.remove("show"); }, 3500);
-    }
-
-    function initAudio() {
-        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    }
-
-    function playClickSound() {
-        initAudio(); if (!audioCtx) return;
-        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(550, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.04);
-    }
-
     function playWinSound() {
         initAudio(); if (!audioCtx) return;
         const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
@@ -351,6 +202,7 @@
     }
 
     function triggerConfettiCelebration() { isConfettiActive = true; createConfetti(); animateConfetti(); }
+
     realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
         const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1234';
         if (!isAdmin) { startLocalSpin(payload.payload.seed); }
@@ -384,7 +236,6 @@
                 </div>`;
         });
     }
-
     function drawWheel() {
         const totalSegments = usersDatabase.length;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
