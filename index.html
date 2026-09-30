@@ -260,10 +260,6 @@
             <button style="margin-top:20px; background:#636e72; color:white;" onclick="closeModal()">بستن پنجره</button>
         </div>
     </div>
-
-    <!-- یک دکمه مخفی کوچک در گوشه صفحه برای اینکه خودتان را ادمین کنید -->
-    <div class="admin-trigger" onclick="makeMeAdmin()">ورود به پنل مدیریت</div>
-
     <!-- کتابخانه Supabase برای هماهنگی آنلاین زنده بدون فیلترشکن -->
     <script src="https://jsdelivr.net"></script>
 <script>
@@ -449,10 +445,19 @@
         }
     }).subscribe();
 
-    function makeMeAdmin() {
+// سیستم تشخیص ادمین هوشمند بر اساس آدرس سایت (جایگزین تابع قبلی کنید)
+function checkAdminAccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const password = urlParams.get('admin');
+    
+    // شما می‌توانید به جای 1234 هر رمزی که دوست دارید بگذارید
+    if (password === '1234') { 
         document.body.classList.add('is-admin');
-        showToast("👑 شما به عنوان مدیر وارد شدید! فرم مدیریت و دکمه چرخاندن برای شما فعال شد.");
+        showToast("👑 مدیریت آنلاین با موفقیت فعال شد.");
     }
+}
+// اجرای خودکار بررسی رمز هنگام باز شدن سایت
+checkAdminAccess();
     function saveUser() {
         const nameInput = document.getElementById("username");
         const codeInput = document.getElementById("usercode");
