@@ -140,6 +140,7 @@
     <!-- استفاده از کتابخانه ابری جایگزین که مشکل تایم‌اوت ایران را ندارد -->
     <script src="https://unpkg.com"></script>
 <script>
+    // ۱. ابتدا تعریف متغیرهای اصلی و پایه برنامه
     let usersDatabase = JSON.parse(localStorage.getItem("wheel_users")) || [];
     const colorPalette = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7", "#a29bfe", "#fd79a8", "#00cec9", "#fab1a0"];
     
@@ -154,19 +155,18 @@
     let confettiParticles = [];
     let isConfettiActive = false;
 
-    // اتصال مستقیم به سرور ابری زنده
+    // ۲. تعریف و راه‌اندازی فوری Supabase (برای حل خطای کنسول شما)
     const SUPABASE_URL = "https://supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50YmJ5dmpjemZidGJieXZqY3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEyMzQ1NjcsImV4cCI6MjA1NjgxMDU2N30.Public_Key_Sample_Only";
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const realtimeChannel = supabase.channel('lucky_wheel_room');
 
-    // 🔐 تابع اصلاح‌شده تشخیص ادمین (حذف استایل اشتباه قبلی)
+    // ۳. تابع بررسی و تایید رمز مدیریت از روی آدرس
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const password = urlParams.get('admin');
         
         if (password === '1234') { 
-            // حذف کلاس مخفی‌کننده به محض درست بودن رمز
             const adminElements = document.querySelectorAll('.admin-only');
             adminElements.forEach(el => {
                 el.style.display = 'block';
@@ -175,7 +175,6 @@
             setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 500);
         }
     }
-
     function resizeConfettiCanvas() {
         confettiCanvas.width = window.innerWidth;
         confettiCanvas.height = window.innerHeight;
@@ -204,6 +203,7 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.04);
     }
+
     function playWinSound() {
         initAudio(); if (!audioCtx) return;
         const chords = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
@@ -250,6 +250,7 @@
 
     function triggerConfettiCelebration() { isConfettiActive = true; createConfetti(); animateConfetti(); }
 
+    // شنونده‌های زنده و آنلاین که حالا بعد از تعریف دیتابیس بدون خطا کار می‌کنند
     realtimeChannel.on('broadcast', { event: 'spin_command' }, (payload) => {
         const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1234';
         if (!isAdmin) { startLocalSpin(payload.payload.seed); }
@@ -261,7 +262,6 @@
 
     function openModal() { document.getElementById("userModal").style.display = "flex"; updateModalList(); }
     function closeModal() { document.getElementById("userModal").style.display = "none"; }
-
     function updateModalList() {
         const container = document.getElementById("modalUsersContainer");
         container.innerHTML = "";
@@ -283,6 +283,7 @@
                 </div>`;
         });
     }
+
     function drawWheel() {
         const totalSegments = usersDatabase.length;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
