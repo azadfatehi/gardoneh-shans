@@ -272,14 +272,19 @@
     const realtimeChannel = supabase.channel('lucky_wheel_room');
 
     // 🔐 سیستم احراز هویت و نمایش بی‌نقص ماژول‌ها بدون تداخل ظاهری
+    // 🔐 تابع اصلاح‌شده برای نمایش قطعی و بدون قفل پنل مدیریت
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const password = urlParams.get('admin');
         
         if (password === '1234') { 
-            // فعال‌سازی المان‌های قفل شده فقط برای مرورگر شخصی شما
-            document.getElementById('admin-panel').style.display = 'block';
-            document.getElementById('spin-btn').style.display = 'inline-flex';
+            // حذف کامل محدودیت نمایش برای پنل ثبت‌نام و دکمه چرخش
+            const adminPanel = document.getElementById('admin-panel');
+            const spinBtn = document.getElementById('spin-btn');
+            
+            if (adminPanel) adminPanel.style.setProperty('display', 'block', 'important');
+            if (spinBtn) spinBtn.style.setProperty('display', 'inline-flex', 'important');
+            
             setTimeout(() => showToast("👑 پنل مدیریت آنلاین با موفقیت فعال شد."), 500);
         }
     }
